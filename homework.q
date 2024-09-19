@@ -1,3 +1,5 @@
+/* Sean Kelley: Homework Functional Programming */
+
 int main(int arg) {
     Ref notList = (3 . 3);
     Ref notList2 = (3 . (5 . 8));
@@ -39,11 +41,9 @@ int main(int arg) {
     if (sameLength(list, list1) == 0) {
         return 7;
     }
-    return 10;
+    return 100;
 
 }
-
-/* Sean Kelley: Homework Functional Programming */
 
 /* 
 Write a Quandary function int isList(Q) that returns a nonzero value if the input, which
