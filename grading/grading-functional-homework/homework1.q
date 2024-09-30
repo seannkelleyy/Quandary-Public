@@ -1,48 +1,3 @@
-int main(int arg) {
-    Ref notList = (3 . 3);
-    Ref notList2 = (3 . (5 . 8));
-    Ref list = (3 . (5 . (8 . nil)));
-    Ref list1 = (3 . (4 . (3 . nil)));
-    Ref list2 = (3 . (4 . (5 . (6 . (7 . (8 . nil))))));
-    Ref list3 = ((56 . (5 . nil)) . nil) . (26 . (2 . ((8 . nil) . nil)));
-    Ref list4 = (3 . (4 . (((56 . (5 . nil)) . nil) . (26 . (2 . ((8 . nil) . nil))))));
-    Ref list5 = (3 . (5 . (5 . nil))) . ((2 . (8 . nil)) . ((6 . (7 . (4 . nil))) . ((2 . (3 . (56 . (92 . nil))) . nil))));
-    Ref list6 = (3 . (5 . nil)) . ((2 . (8 . nil)) . ((6 . (7 . (4 . nil))) . ((2 . (3 . (56 . (92 . nil))) . nil))));
-
-    if (isList(list) == 0) {
-        return 1;
-    }
-    if (isList(notList) != 0) {
-        return 1;
-    }
-    if (isList(notList2) != 0) {
-        return 1;
-    }
-
-    Ref newList = append(list, list3);
-    if (isList(newList) == 0) {
-        return 2;
-    }
-
-    Ref reversedList = reverse(list4);
-    if (isList(reversedList) == 0) {
-        return 3;
-    }
-
-    if (isSorted(list5) != 0) {
-        return 4;
-    }
-    if (isSorted(list6) == 0) {
-        return 4;
-    }
-
-    if (sameLength(list, list1) == 0) {
-        return 7;
-    }
-    return 10;
-
-}
-
 /* Sean Kelley: Homework Functional Programming */
 
 /* 
@@ -52,6 +7,12 @@ it is nil or if it is a reference r such that right(r) is a list. Hint: You’ll
 function int isAtom(Q).
 */
 int isList(Q list) {
+    if (isAtom(list) != 0) {
+        if (isNil(list) != 0) {
+            return 1;
+        }
+        return 0;
+    }
     if (isAtom(right((Ref)list)) != 0) {
         if (isNil(right((Ref)list)) != 0) {
             return 1;
@@ -71,6 +32,9 @@ evaluates to
 (3 . (4 . (((56 . (5 . nil)) . nil) . (26 . (2 . ((8 . nil) . nil))))))
 */
 Ref append(Ref list1, Ref list2) {
+    if (isNil(list1) != 0) {
+        return list2;
+    }
     if (isNil(right((Ref)list1)) != 0) { 
         return (left(list1) . list2);
     }
@@ -88,7 +52,7 @@ evaluates to
 Hint: It may help to call your append function.
 */
 Ref reverse(Ref list) {
-    if (isNil(right((Ref)list)) != 0) {
+    if (isNil(list) != 0 || isNil(right((Ref)list)) != 0) {
         return list;
     }
     return append(reverse((Ref)right(list)), (left(list) . nil));
@@ -113,6 +77,9 @@ int length(Ref list) {
 }
 
 int isSorted(Ref list) {
+    if (isNil(list) != 0) {
+        return 1;
+    }
     if (isNil(right((Ref)list)) != 0) {
         return 1; 
     }
@@ -133,6 +100,9 @@ sameLength may call are sameLength and built-in functions
 */
 
 int sameLength(Ref list1, Ref list2) {
+    if (isNil(list1) != 0 && isNil(list2) != 0) {
+        return 1;
+    }
     if (isNil(right((Ref)list1)) != 0 && isNil(right((Ref)list2)) != 0) {
         return 1;
     }

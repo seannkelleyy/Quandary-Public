@@ -3,6 +3,7 @@ if [ $# -lt 2 ]
 then
 	echo "Expected input:"
 	echo "grade.sh <ref interpreter> <hw submission>"
+	exit 1
 fi
 
 # Setup
@@ -18,11 +19,17 @@ run_test() {
 	
 	# Run test file
 	output=$($quandary ./test.q 20)
-	points=`expr "$output" : 'Interpreter returned \(.*\)Quandary'`
-	# echo $output
-	if [[ $output != *"error"* ]]
+	echo "Output for $1: $output"  # Debugging line
+	points=$(expr "$output" : 'Interpreter returned \(.*\)Quandary')
+	echo "Points for $1: $points"  # Debugging line
+	
+	# Check if points is a valid number
+	if [[ $points =~ ^[0-9]+$ ]]
 	then
 		score=$((score + $points))
+		echo "$1: Passed"
+	else
+		echo "$1: Failed"
 	fi
 }
 

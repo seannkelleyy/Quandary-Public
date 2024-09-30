@@ -31,9 +31,9 @@ terminal PLUS, MINUS, TIMES, LPAREN, RPAREN, RETURN, SEMICOLON, UMINUS;
 terminal Long    INTCONST;
 
 non terminal Program         program;
+non terminal Stmt            stmt;
 non terminal Expr            expr;
 non terminal BinaryExpr      binaryExpr;
-non terminal ReturnStmt      returnStmt;
 
 precedence left PLUS, MINUS;
 precedence left TIMES;
@@ -41,27 +41,23 @@ precedence left UMINUS;
 
 start with program;
 
-program ::= returnStmt:r SEMICOLON
-            {: RESULT = new Program(r, loc(rleft, rright)); :}
-         |  expr:e SEMICOLON
-            {: RESULT = new Program(new ReturnStmt(e, loc(eleft, eright)), loc(eleft, eright)); :}
+program ::= stmt:s
+            {: RESULT = new Program(s, loc(sleft, sright)); :}
          ;
 
-returnStmt ::= RETURN expr:e
+stmt ::= RETURN expr:e SEMICOLON
                {: RESULT = new ReturnStmt(e, loc(eleft, eright)); :}
-            |  RETURN
-               {: RESULT = new ReturnStmt(null, loc(0, 0)); :}
             ;
 
 expr ::= INTCONST:c
          {: RESULT = new ConstExpr(c, loc(cleft, cright)); :}
+      |  MINUS expr:e
+         {: RESULT = new UnaryExpr(UnaryExpr.MINUS, e, loc(eleft, eright)); :}
+         %prec UMINUS
       |  binaryExpr:e
          {: RESULT = e; :}
       |  LPAREN expr:e RPAREN
          {: RESULT = e; :}
-      |  MINUS expr:e
-         {: RESULT = new UnaryExpr(UnaryExpr.MINUS, e, loc(eleft, eright)); :}
-         %prec UMINUS
       ;
 
 binaryExpr ::= expr:e1 PLUS expr:e2

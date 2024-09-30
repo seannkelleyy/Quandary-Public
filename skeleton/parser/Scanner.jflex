@@ -59,9 +59,6 @@ white_space = {new_line} | [ \t\f]
 <YYINITIAL>{
 /* This is where tokens are recognized. Every token recognized by the scanner corresponds to a terminal in the parser's grammar. */
 
-/* Keywords and Identifiers */
-"return"               { return symbol("return", RETURN); }
-
 /* int literal token */
 {IntLiteral} { return symbol("Intconst", INTCONST, Long.parseLong(yytext())); }
 
@@ -71,6 +68,8 @@ white_space = {new_line} | [ \t\f]
 "*"               { return symbol("*", TIMES); }
 "("               { return symbol("(", LPAREN); }
 ")"               { return symbol(")", RPAREN); }
+
+"return"               { return symbol("return", RETURN); }
 ";"               { return symbol(";", SEMICOLON); }
 
 /* You shouldn't need to modify anything below this */

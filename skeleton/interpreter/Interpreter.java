@@ -102,7 +102,11 @@ public class Interpreter {
     }
 
     Object executeRoot(Program astRoot, long arg) {
-        return evaluate(astRoot.getExpr());
+        return execute(astRoot.getStmt());
+    }
+
+    Object execute(Stmt stmt) {
+        return evaluate(((ReturnStmt) stmt).getExpr());
     }
 
     Object evaluate(Expr expr) {
@@ -128,8 +132,6 @@ public class Interpreter {
                 default:
                     throw new RuntimeException("Unhandled operator");
             }
-        } else if (expr instanceof ReturnStmt) {
-            return evaluate(((ReturnStmt) expr).getExpr());
         } else {
             throw new RuntimeException("Unhandled Expr type");
         }
