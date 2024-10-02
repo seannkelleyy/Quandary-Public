@@ -7,6 +7,9 @@ public class Cond extends Expr {
     public static final int GT = 4;
     public static final int LTE = 5;
     public static final int GTE = 6;
+    public static final int AND = 7;
+    public static final int OR = 8;
+    public static final int NOT = 9;
 
     private Expr left;
     private int operator;

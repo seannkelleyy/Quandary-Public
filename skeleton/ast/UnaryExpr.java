@@ -1,7 +1,6 @@
 package ast;
 
 public class UnaryExpr extends Expr {
-
     public static final int MINUS = 1;
 
     final int operator;

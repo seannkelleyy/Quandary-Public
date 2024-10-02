@@ -107,29 +107,24 @@ public class Interpreter {
     }
 
     Object executeRoot(Program astRoot, long arg) {
-        // Retrieve the main function from the program and execute it
         FuncDef mainFunc = astRoot.getMainFunction();
         return execute(mainFunc.getBody(), mainFunc.getFormalDeclList(), arg);
     }
 
     Object execute(StmtList body, FormalDeclList params, long arg) {
-        // Scope for function parameters
         environment.push(new HashMap<>());
 
-        // Assign function argument to the parameter's identifier
         if (params.getVarDecls().size() > 0) {
             VarDecl param = params.getVarDecls().get(0);
             environment.peek().put(param.getIdentifier(), arg);
         }
 
-        // Scope for local variables
         environment.push(new HashMap<>());
 
         Object result = executeStmtList(body);
 
-        // Pop scopes
-        environment.pop(); // local variables
-        environment.pop(); // function parameters
+        environment.pop();
+        environment.pop();
 
         return result;
     }
@@ -145,38 +140,42 @@ public class Interpreter {
     }
 
     Object executeStmt(Stmt stmt) {
-        System.out.println("Executing: " + stmt);
         if (stmt instanceof ReturnStmt) {
-            System.out.println("Return statement" + stmt);
             ReturnStmt returnStmt = (ReturnStmt) stmt;
             Object returnValue = evaluateExpr(returnStmt.getExpr());
-            System.out.println("Return value: " + returnValue);
             return returnValue;
+        } else if (stmt instanceof BlockStmt) {
+            BlockStmt blockStmt = (BlockStmt) stmt;
+            return executeStmtList(blockStmt.getStmtList());
         } else if (stmt instanceof PrintStmt) {
             PrintStmt printStmt = (PrintStmt) stmt;
             Object value = evaluateExpr(printStmt.getExpr());
-            System.out.println(value); // Print the value
+            System.out.println(value);
         } else if (stmt instanceof IfStmt) {
             IfStmt ifStmt = (IfStmt) stmt;
-            Object conditionValue = evaluateExpr(ifStmt.getCondition());
-            // Only proceed to the then part if the condition is true
+            Object conditionValue = evaluateExpr(ifStmt.getCond());
             if ((Boolean) conditionValue) {
-                return executeStmtList(ifStmt.getThenStmt());
-            } else if (ifStmt.getElseStmt() != null) {
-                return executeStmtList(ifStmt.getElseStmt());
+                return executeStmt(ifStmt.getStmt());
             }
-            // If condition is false and there's no else, return null to proceed
-            return null; // This is crucial for control flow
+            return null;
+        } else if (stmt instanceof IfElseStmt) {
+            IfElseStmt ifElseStmt = (IfElseStmt) stmt;
+            Object conditionValue = evaluateExpr(ifElseStmt.getCond());
+            if ((Boolean) conditionValue) {
+                return executeStmt(ifElseStmt.getStmt1());
+            } else if (ifElseStmt.getStmt2() != null) {
+                return executeStmt(ifElseStmt.getStmt2());
+            }
         } else if (stmt instanceof VarDecl) {
             VarDecl varDecl = (VarDecl) stmt;
             Object value = evaluateExpr(varDecl.getExpr());
             environment.peek().put(varDecl.getIdentifier(), value);
         }
-        return null; // Continue to the next statement
+
+        return null;
     }
 
     Object evaluateExpr(Expr expr) {
-        System.out.println("Evaluating: " + expr);
         if (expr instanceof ConstExpr) {
             ConstExpr constExpr = (ConstExpr) expr;
             return constExpr.getValue();
@@ -195,8 +194,7 @@ public class Interpreter {
             Object operand = evaluateExpr(unaryExpr.getExpr());
             switch (unaryExpr.getOperator()) {
                 case UnaryExpr.MINUS:
-                    return -(Long) operand; // Negate the value
-                // Handle other unary operators if any
+                    return -(Long) operand;
             }
         } else if (expr instanceof BinaryExpr) {
             BinaryExpr binaryExpr = (BinaryExpr) expr;
@@ -209,7 +207,6 @@ public class Interpreter {
                     return (Long) leftValue - (Long) rightValue;
                 case BinaryExpr.TIMES:
                     return (Long) leftValue * (Long) rightValue;
-                // Add handling for other operators
             }
         } else if (expr instanceof Cond) {
             Cond condExpr = (Cond) expr;
@@ -217,6 +214,7 @@ public class Interpreter {
             Object rightValue = evaluateExpr(condExpr.getRight());
             switch (condExpr.getOperator()) {
                 case Cond.EQ:
+                    System.out.println(leftValue.equals(rightValue));
                     return leftValue.equals(rightValue);
                 case Cond.NEQ:
                     return !leftValue.equals(rightValue);
@@ -228,10 +226,14 @@ public class Interpreter {
                     return (Long) leftValue <= (Long) rightValue;
                 case Cond.GTE:
                     return (Long) leftValue >= (Long) rightValue;
-                // Add handling for other conditional operators
+                case Cond.AND:
+                    return (Boolean) leftValue && (Boolean) rightValue;
+                case Cond.OR:
+                    return (Boolean) leftValue || (Boolean) rightValue;
+                case Cond.NOT:
+                    return !(Boolean) leftValue;
             }
         }
-        // Add handling for other expression types
         return null;
     }
 

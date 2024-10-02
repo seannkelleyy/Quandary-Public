@@ -1,20 +1,16 @@
 /* int main(int arg) {
     int y = 5;
-    print y;
-    if (arg > 3) {
-        int x = 2;
-        return arg * x;
-    } else {
-        return 5;
+    if (arg == 5) {
+        return 1;
     }
-    return 5 * arg;
-} */
+    return y * arg;
+}  */
 
 int main (int arg){
-    if (((((arg == 10))))){
+    if (((((arg == 10))))) {
         return arg - 53;
-    }else if (arg == -10){
-        return arg + 53;
+    } else if (arg == -10){
+        return arg + 10;
     } else {
         return 5;
     }
