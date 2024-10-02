@@ -1,2 +1,2 @@
-grading/grade.sh skeleton/myproject.tgz ref/quandary grading/calc-public.dat examples 
-seankelley$ skeleton/quandary examples/t7.calc 42
+grading/grade.sh skeleton/myproject.tgz ref/quandary grading/simplified-without-calls-public.dat examples 
+skeleton/quandary examples/t7.calc 42

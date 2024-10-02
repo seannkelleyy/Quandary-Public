@@ -27,43 +27,96 @@ parser code {:
 
 :};
 
-terminal PLUS, MINUS, TIMES, LPAREN, RPAREN, RETURN, SEMICOLON, UMINUS;
+terminal PLUS, MINUS, TIMES, ASSIGN, EQ, NEQ, LT, GT, LTE, GTE, AND, OR, NOT, LPAREN, RPAREN, LBRACE, RBRACE, COMMA, SEMICOLON, INT, RETURN, IF, ELSE, PRINT, UMINUS;
 terminal Long    INTCONST;
+terminal String  IDENT;
 
 non terminal Program         program;
 non terminal Stmt            stmt;
 non terminal Expr            expr;
 non terminal BinaryExpr      binaryExpr;
+non terminal FuncDef         funcDef;
+non terminal FormalDeclList  formalDecList;
+non terminal StmtList        stmtList;
+non terminal VarDecl         varDecl;
+non terminal Cond            condExpr;
 
+precedence left EQ, NEQ;
+precedence left LT, GT, LTE, GTE;
 precedence left PLUS, MINUS;
 precedence left TIMES;
 precedence left UMINUS;
 
 start with program;
 
-program ::= stmt:s
-            {: RESULT = new Program(s, loc(sleft, sright)); :}
-         ;
+program ::= funcDef:f
+         {: RESULT = new Program(f, loc(fleft, fright)); :}
+      ;
+
+funcDef ::= INT IDENT:id LPAREN formalDecList:params RPAREN LBRACE stmtList:body RBRACE:rbrace
+     {: RESULT = new FuncDef(id, params, body, loc(idleft, rbraceright)); :}
+;
+
+formalDecList ::= INT IDENT:arg
+     {: 
+        RESULT = new FormalDeclList(List.of(new VarDecl("int", arg, null, loc(argleft, argright))), loc(argleft, argright));
+     :}
+|  /* empty */
+     {: RESULT = new FormalDeclList(new ArrayList<>(), loc(0, 0)); :}
+;
+
+stmtList ::= stmt:s
+         {: RESULT = new StmtList(new ArrayList<>(List.of(s)), loc(sleft, sright)); :}
+      |  stmtList:sl stmt:s
+         {: 
+            sl.addStmt(s);
+            RESULT = sl;
+         :}
+      ;
 
 stmt ::= RETURN expr:e SEMICOLON
-               {: RESULT = new ReturnStmt(e, loc(eleft, eright)); :}
-            ;
+         {: RESULT = new ReturnStmt(e, loc(eleft, eright)); :}
+      |  varDecl:v SEMICOLON
+         {: RESULT = v; :}
+      |  IF LPAREN expr:cond RPAREN LBRACE stmtList:thenPart RBRACE
+         {: RESULT = new IfStmt(cond, thenPart, null, loc(condleft, thenPartright)); :}
+      |  IF LPAREN expr:cond RPAREN stmt:s
+         {: RESULT = new IfStmt(cond, new StmtList(List.of(s), loc(sleft, sright)), null, loc(condleft, sright)); :}
+      | IF LPAREN expr:cond RPAREN LBRACE stmtList:thenPart RBRACE ELSE LBRACE stmtList:elsePart RBRACE
+         {: RESULT = new IfStmt(cond, thenPart, elsePart, loc(condleft, elsePartright)); :}
+      | PRINT expr:e SEMICOLON
+         {: RESULT = new PrintStmt(e, loc(eleft, eright)); :}
+      ;
+
+varDecl ::= INT IDENT:id ASSIGN expr:e
+         {: RESULT = new VarDecl("int", id, e, loc(idleft, idright)); :}
+      ;
 
 expr ::= INTCONST:c
          {: RESULT = new ConstExpr(c, loc(cleft, cright)); :}
       |  MINUS expr:e
          {: RESULT = new UnaryExpr(UnaryExpr.MINUS, e, loc(eleft, eright)); :}
          %prec UMINUS
-      |  binaryExpr:e
-         {: RESULT = e; :}
+      |  expr:e1 PLUS expr:e2
+         {: RESULT = new BinaryExpr(e1, BinaryExpr.PLUS, e2, loc(e1left, e1right)); :}
+      |  expr:e1 MINUS expr:e2
+         {: RESULT = new BinaryExpr(e1, BinaryExpr.MINUS, e2, loc(e1left, e1right)); :}
+      |  expr:e1 TIMES expr:e2
+         {: RESULT = new BinaryExpr(e1, BinaryExpr.TIMES, e2, loc(e1left, e1right)); :}
+      |  expr:e1 EQ expr:e2
+         {: RESULT = new Cond(e1, Cond.EQ, e2, loc(e1left, e1right)); :}
+      |  expr:e1 NEQ expr:e2
+         {: RESULT = new Cond(e1, Cond.NEQ, e2, loc(e1left, e1right)); :}
+      |  expr:e1 LT expr:e2
+         {: RESULT = new Cond(e1, Cond.LT, e2, loc(e1left, e1right)); :}
+      |  expr:e1 GT expr:e2
+         {: RESULT = new Cond(e1, Cond.GT, e2, loc(e1left, e1right)); :}
+      |  expr:e1 LTE expr:e2
+         {: RESULT = new Cond(e1, Cond.LTE, e2, loc(e1left, e1right)); :}
+      |  expr:e1 GTE expr:e2
+         {: RESULT = new Cond(e1, Cond.GTE, e2, loc(e1left, e1right)); :}
       |  LPAREN expr:e RPAREN
          {: RESULT = e; :}
-      ;
-
-binaryExpr ::= expr:e1 PLUS expr:e2
-               {: RESULT = new BinaryExpr(e1, BinaryExpr.PLUS, e2, loc(e1left, e1right)); :}
-            |  expr:e1 MINUS expr:e2
-               {: RESULT = new BinaryExpr(e1, BinaryExpr.MINUS, e2, loc(e1left, e1right)); :}
-            |  expr:e1 TIMES expr:e2
-               {: RESULT = new BinaryExpr(e1, BinaryExpr.TIMES, e2, loc(e1left, e1right)); :}
-            ;
+      |  IDENT:id
+         {: RESULT = new VarExpr(id, loc(idleft, idright)); :}
+      ; 

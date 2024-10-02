@@ -1,21 +1,21 @@
 package ast;
 
-import java.io.PrintStream;
+import java.util.List;
 
-public class Program extends ASTNode {
+public class Program {
+    private final FuncDef mainFunction;
+    private final Location loc;
 
-    final Stmt stmt;
-
-    public Program(Stmt stmt, Location loc) {
-        super(loc);
-        this.stmt = stmt;
+    public Program(FuncDef mainFunction, Location loc) {
+        this.mainFunction = mainFunction;
+        this.loc = loc;
     }
 
-    public Stmt getStmt() {
-        return stmt;
+    public FuncDef getMainFunction() {
+        return mainFunction;
     }
 
-    public void println(PrintStream ps) {
-        ps.println(stmt);
+    public Location getLoc() {
+        return loc;
     }
 }

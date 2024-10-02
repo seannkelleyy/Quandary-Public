@@ -40,8 +40,8 @@ do_one_test() {
         # echo SUB_OUT is $SUB_OUT
     fi
     # Uncomment to debug ALL test cases:
-    # echo REF_OUT is $REF_OUT
-    # echo SUB_OUT is $SUB_OUT
+     echo REF_OUT is $REF_OUT
+     echo SUB_OUT is $SUB_OUT
 }
 
 if [ "$#" -ne 4 ] && [ "$#" -ne 5 ]; then

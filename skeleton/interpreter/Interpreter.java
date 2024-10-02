@@ -1,7 +1,8 @@
 package interpreter;
 
 import java.io.*;
-import java.util.Random;
+import java.util.HashMap;
+import java.util.Stack;
 
 import parser.ParserWrapper;
 import ast.*;
@@ -19,6 +20,7 @@ public class Interpreter {
     public static final int EXIT_NONDETERMINISM_ERROR = 7;
 
     static private Interpreter interpreter;
+    private final Stack<HashMap<String, Object>> environment;
 
     public static Interpreter getInterpreter() {
         return interpreter;
@@ -77,16 +79,19 @@ public class Interpreter {
         // astRoot.println(System.out);
         interpreter = new Interpreter(astRoot);
         interpreter.initMemoryManager(gcType, heapBytes);
-        String returnValueAsString = interpreter.executeRoot(astRoot, quandaryArg).toString();
-        System.out.println("Interpreter returned " + returnValueAsString);
+        Object returnValue = interpreter.executeRoot(astRoot, quandaryArg);
+        if (returnValue != null) {
+            System.out.println("Interpreter returned " + returnValue.toString());
+        } else {
+            System.out.println("Interpreter returned null");
+        }
     }
 
     final Program astRoot;
-    final Random random;
 
     private Interpreter(Program astRoot) {
         this.astRoot = astRoot;
-        this.random = new Random();
+        this.environment = new Stack<>();
     }
 
     void initMemoryManager(String gcType, long heapBytes) {
@@ -102,39 +107,132 @@ public class Interpreter {
     }
 
     Object executeRoot(Program astRoot, long arg) {
-        return execute(astRoot.getStmt());
+        // Retrieve the main function from the program and execute it
+        FuncDef mainFunc = astRoot.getMainFunction();
+        return execute(mainFunc.getBody(), mainFunc.getFormalDeclList(), arg);
     }
 
-    Object execute(Stmt stmt) {
-        return evaluate(((ReturnStmt) stmt).getExpr());
+    Object execute(StmtList body, FormalDeclList params, long arg) {
+        // Scope for function parameters
+        environment.push(new HashMap<>());
+
+        // Assign function argument to the parameter's identifier
+        if (params.getVarDecls().size() > 0) {
+            VarDecl param = params.getVarDecls().get(0);
+            environment.peek().put(param.getIdentifier(), arg);
+        }
+
+        // Scope for local variables
+        environment.push(new HashMap<>());
+
+        Object result = executeStmtList(body);
+
+        // Pop scopes
+        environment.pop(); // local variables
+        environment.pop(); // function parameters
+
+        return result;
     }
 
-    Object evaluate(Expr expr) {
-        if (expr instanceof ConstExpr) {
-            return ((ConstExpr) expr).getValue();
-        } else if (expr instanceof BinaryExpr) {
-            BinaryExpr binaryExpr = (BinaryExpr) expr;
-            switch (binaryExpr.getOperator()) {
-                case BinaryExpr.PLUS:
-                    return (Long) evaluate(binaryExpr.getLeftExpr()) + (Long) evaluate(binaryExpr.getRightExpr());
-                case BinaryExpr.MINUS:
-                    return (Long) evaluate(binaryExpr.getLeftExpr()) - (Long) evaluate(binaryExpr.getRightExpr());
-                case BinaryExpr.TIMES:
-                    return (Long) evaluate(binaryExpr.getLeftExpr()) * (Long) evaluate(binaryExpr.getRightExpr());
-                default:
-                    throw new RuntimeException("Unhandled operator");
+    Object executeStmtList(StmtList stmtList) {
+        for (Stmt stmt : stmtList.getStmts()) {
+            Object result = executeStmt(stmt);
+            if (result != null) {
+                return result;
             }
+        }
+        return null;
+    }
+
+    Object executeStmt(Stmt stmt) {
+        System.out.println("Executing: " + stmt);
+        if (stmt instanceof ReturnStmt) {
+            System.out.println("Return statement" + stmt);
+            ReturnStmt returnStmt = (ReturnStmt) stmt;
+            Object returnValue = evaluateExpr(returnStmt.getExpr());
+            System.out.println("Return value: " + returnValue);
+            return returnValue;
+        } else if (stmt instanceof PrintStmt) {
+            PrintStmt printStmt = (PrintStmt) stmt;
+            Object value = evaluateExpr(printStmt.getExpr());
+            System.out.println(value); // Print the value
+        } else if (stmt instanceof IfStmt) {
+            IfStmt ifStmt = (IfStmt) stmt;
+            Object conditionValue = evaluateExpr(ifStmt.getCondition());
+            // Only proceed to the then part if the condition is true
+            if ((Boolean) conditionValue) {
+                return executeStmtList(ifStmt.getThenStmt());
+            } else if (ifStmt.getElseStmt() != null) {
+                return executeStmtList(ifStmt.getElseStmt());
+            }
+            // If condition is false and there's no else, return null to proceed
+            return null; // This is crucial for control flow
+        } else if (stmt instanceof VarDecl) {
+            VarDecl varDecl = (VarDecl) stmt;
+            Object value = evaluateExpr(varDecl.getExpr());
+            environment.peek().put(varDecl.getIdentifier(), value);
+        }
+        return null; // Continue to the next statement
+    }
+
+    Object evaluateExpr(Expr expr) {
+        System.out.println("Evaluating: " + expr);
+        if (expr instanceof ConstExpr) {
+            ConstExpr constExpr = (ConstExpr) expr;
+            return constExpr.getValue();
+        } else if (expr instanceof VarExpr) {
+            VarExpr varExpr = (VarExpr) expr;
+            Object value = null;
+            for (int i = environment.size() - 1; i >= 0; i--) {
+                value = environment.get(i).get(varExpr.getIdentifier());
+                if (value != null) {
+                    break;
+                }
+            }
+            return value;
         } else if (expr instanceof UnaryExpr) {
             UnaryExpr unaryExpr = (UnaryExpr) expr;
+            Object operand = evaluateExpr(unaryExpr.getExpr());
             switch (unaryExpr.getOperator()) {
                 case UnaryExpr.MINUS:
-                    return -(Long) evaluate(unaryExpr.getExpr());
-                default:
-                    throw new RuntimeException("Unhandled operator");
+                    return -(Long) operand; // Negate the value
+                // Handle other unary operators if any
             }
-        } else {
-            throw new RuntimeException("Unhandled Expr type");
+        } else if (expr instanceof BinaryExpr) {
+            BinaryExpr binaryExpr = (BinaryExpr) expr;
+            Object leftValue = evaluateExpr(binaryExpr.getLeft());
+            Object rightValue = evaluateExpr(binaryExpr.getRight());
+            switch (binaryExpr.getOperator()) {
+                case BinaryExpr.PLUS:
+                    return (Long) leftValue + (Long) rightValue;
+                case BinaryExpr.MINUS:
+                    return (Long) leftValue - (Long) rightValue;
+                case BinaryExpr.TIMES:
+                    return (Long) leftValue * (Long) rightValue;
+                // Add handling for other operators
+            }
+        } else if (expr instanceof Cond) {
+            Cond condExpr = (Cond) expr;
+            Object leftValue = evaluateExpr(condExpr.getLeft());
+            Object rightValue = evaluateExpr(condExpr.getRight());
+            switch (condExpr.getOperator()) {
+                case Cond.EQ:
+                    return leftValue.equals(rightValue);
+                case Cond.NEQ:
+                    return !leftValue.equals(rightValue);
+                case Cond.LT:
+                    return (Long) leftValue < (Long) rightValue;
+                case Cond.GT:
+                    return (Long) leftValue > (Long) rightValue;
+                case Cond.LTE:
+                    return (Long) leftValue <= (Long) rightValue;
+                case Cond.GTE:
+                    return (Long) leftValue >= (Long) rightValue;
+                // Add handling for other conditional operators
+            }
         }
+        // Add handling for other expression types
+        return null;
     }
 
     public static void fatalError(String message, int processReturnCode) {

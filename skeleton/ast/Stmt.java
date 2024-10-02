@@ -1,8 +1,13 @@
 package ast;
 
-public abstract class Stmt extends ASTNode {
+public abstract class Stmt {
+    private Location loc;
 
-    Stmt(Location loc) {
-        super(loc);
+    public Stmt(Location loc) {
+        this.loc = loc;
+    }
+
+    public Location getLoc() {
+        return loc;
     }
 }

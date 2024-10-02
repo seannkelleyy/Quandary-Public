@@ -19,8 +19,8 @@ import interpreter.Interpreter;
 %{
     StringBuffer string = new StringBuffer();
     public Lexer(java.io.Reader in, ComplexSymbolFactory sf){
-	this(in);
-	symbolFactory = sf;
+    this(in);
+    symbolFactory = sf;
     }
     ComplexSymbolFactory symbolFactory;
 
@@ -33,11 +33,7 @@ import interpreter.Interpreter;
       Location right = new Location(yyline + 1, yycolumn + yylength(), yycolumn + 1);
       return symbolFactory.newSymbol(name, sym, left, right, val);
   } 
-  /*private Symbol symbol(String name, int sym, Object val, int buflength) {
-      Location left = new Location(yyline + 1, yycolumn + yylength() - buflength, yychar + yylength() - buflength);
-      Location right = new Location(yyline + 1, yycolumn + yylength(), yychar + yylength());
-      return symbolFactory.newSymbol(name, sym, left, right, val);
-  }*/      
+
   private void error(String message) {
     System.out.println("Error at line "+ (yyline + 1) + ", column " + (yycolumn + 1) + " : " + message);
   }
@@ -49,6 +45,7 @@ import interpreter.Interpreter;
 
 
 IntLiteral = 0 | [1-9][0-9]*
+IDENT = [a-zA-Z_][a-zA-Z0-9_]*
 
 new_line = \r|\n|\r\n;
 
@@ -62,18 +59,36 @@ white_space = {new_line} | [ \t\f]
 /* int literal token */
 {IntLiteral} { return symbol("Intconst", INTCONST, Long.parseLong(yytext())); }
 
+
 /* Operators and Symbols */
 "+"               { return symbol("+",  PLUS); }
 "-"               { return symbol("-", MINUS); }
 "*"               { return symbol("*", TIMES); }
+"="               { return symbol("=", ASSIGN); }
+"=="              { return symbol("==", EQ); }
+"!="              { return symbol("!=", NEQ); }
+"<"               { return symbol("<", LT); }
+">"               { return symbol(">", GT); }
+"<="              { return symbol("<=", LTE); }
+">="              { return symbol(">=", GTE); }
+"&&"              { return symbol("&&", AND); }
+"||"              { return symbol("||", OR); }
+"!"               { return symbol("!", NOT); }
 "("               { return symbol("(", LPAREN); }
 ")"               { return symbol(")", RPAREN); }
-
-"return"               { return symbol("return", RETURN); }
+"{"               { return symbol("{", LBRACE); }
+"}"               { return symbol("}", RBRACE); }
+","               { return symbol(",", COMMA); }
 ";"               { return symbol(";", SEMICOLON); }
 
-/* You shouldn't need to modify anything below this */
+/* Keywords */
+"int"               { return symbol("int", INT); }
+"return"            { return symbol("return", RETURN); }
+"if"                { return symbol("if", IF); }
+"else"              { return symbol("else", ELSE); }
+"print"             { return symbol("print", PRINT); }
 
+{IDENT} { return symbol("IDENT", IDENT, yytext()); }
 /* comments */
 "/*" [^*] ~"*/" | "/*" "*"+ "/"
                   { /* ignore comments */ }
@@ -83,4 +98,4 @@ white_space = {new_line} | [ \t\f]
 }
 
 /* error fallback */
-[^]               { /*error("Illegal character <" + yytext() + ">");*/ Interpreter.fatalError("Illegal character <" + yytext() + ">", Interpreter.EXIT_PARSING_ERROR); }
+[^]               { Interpreter.fatalError("Illegal character <" + yytext() + ">", Interpreter.EXIT_PARSING_ERROR); }

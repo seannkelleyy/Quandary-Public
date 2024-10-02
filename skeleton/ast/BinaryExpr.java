@@ -1,32 +1,30 @@
 package ast;
 
 public class BinaryExpr extends Expr {
-
     public static final int PLUS = 1;
     public static final int MINUS = 2;
     public static final int TIMES = 3;
+    private Expr left;
+    private int operator;
+    private Expr right;
 
-    final Expr expr1;
-    final int operator;
-    final Expr expr2;
-
-    public BinaryExpr(Expr expr1, int operator, Expr expr2, Location loc) {
+    public BinaryExpr(Expr left, int operator, Expr right, Location loc) {
         super(loc);
-        this.expr1 = expr1;
+        this.left = left;
         this.operator = operator;
-        this.expr2 = expr2;
+        this.right = right;
     }
 
-    public Expr getLeftExpr() {
-        return expr1;
+    public Expr getLeft() {
+        return left;
+    }
+
+    public Expr getRight() {
+        return right;
     }
 
     public int getOperator() {
         return operator;
-    }
-
-    public Expr getRightExpr() {
-        return expr2;
     }
 
     @Override
@@ -43,6 +41,6 @@ public class BinaryExpr extends Expr {
                 s = "*";
                 break;
         }
-        return "(" + expr1 + " " + s + " " + expr2 + ")";
+        return "(" + left + " " + s + " " + right + ")";
     }
 }

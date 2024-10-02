@@ -8,29 +8,65 @@ package parser;
 /** CUP generated interface containing symbol constants. */
 public interface sym {
   /* terminals */
-  public static final int MINUS = 3;
-  public static final int UMINUS = 9;
-  public static final int EOF = 0;
-  public static final int PLUS = 2;
-  public static final int error = 1;
-  public static final int SEMICOLON = 8;
-  public static final int RPAREN = 6;
   public static final int TIMES = 4;
-  public static final int RETURN = 7;
-  public static final int INTCONST = 10;
-  public static final int LPAREN = 5;
+  public static final int AND = 12;
+  public static final int LT = 8;
+  public static final int IDENT = 28;
+  public static final int ELSE = 24;
+  public static final int SEMICOLON = 20;
+  public static final int PLUS = 2;
+  public static final int INT = 21;
+  public static final int RBRACE = 18;
+  public static final int OR = 13;
+  public static final int RPAREN = 16;
+  public static final int LTE = 10;
+  public static final int NOT = 14;
+  public static final int RETURN = 22;
+  public static final int INTCONST = 27;
+  public static final int IF = 23;
+  public static final int LBRACE = 17;
+  public static final int LPAREN = 15;
+  public static final int GT = 9;
+  public static final int GTE = 11;
+  public static final int COMMA = 19;
+  public static final int EOF = 0;
+  public static final int MINUS = 3;
+  public static final int PRINT = 25;
+  public static final int error = 1;
+  public static final int ASSIGN = 5;
+  public static final int EQ = 6;
+  public static final int NEQ = 7;
+  public static final int UMINUS = 26;
   public static final String[] terminalNames = new String[] {
   "EOF",
   "error",
   "PLUS",
   "MINUS",
   "TIMES",
+  "ASSIGN",
+  "EQ",
+  "NEQ",
+  "LT",
+  "GT",
+  "LTE",
+  "GTE",
+  "AND",
+  "OR",
+  "NOT",
   "LPAREN",
   "RPAREN",
-  "RETURN",
+  "LBRACE",
+  "RBRACE",
+  "COMMA",
   "SEMICOLON",
+  "INT",
+  "RETURN",
+  "IF",
+  "ELSE",
+  "PRINT",
   "UMINUS",
-  "INTCONST"
+  "INTCONST",
+  "IDENT"
   };
 }
 
